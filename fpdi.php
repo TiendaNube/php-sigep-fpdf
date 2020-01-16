@@ -8,14 +8,14 @@
  * @version   1.6.1
  */
 
-if (!class_exists('FPDF_TPL')) {
+if (!class_exists('FPDF_TPLSigep')) {
     require_once('fpdf_tpl.php');
 }
 
 /**
  * Class FPDI
  */
-class FPDI extends FPDF_TPL
+class FPDISigep extends FPDF_TPLSigep
 {
     /**
      * FPDI version
@@ -34,14 +34,14 @@ class FPDI extends FPDF_TPL
     /**
      * Parser-Objects
      *
-     * @var fpdi_pdf_parser[]
+     * @var fpdi_pdf_parserSigep[]
      */
     public $parsers = array();
     
     /**
      * Current parser
      *
-     * @var fpdi_pdf_parser
+     * @var fpdi_pdf_parserSigep
      */
     public $currentParser;
 
@@ -113,14 +113,14 @@ class FPDI extends FPDF_TPL
      * Returns a PDF parser object
      *
      * @param string $filename
-     * @return fpdi_pdf_parser
+     * @return fpdi_pdf_parserSigep
      */
     protected function _getPdfParser($filename)
     {
-        if (!class_exists('fpdi_pdf_parser')) {
+        if (!class_exists('fpdi_pdf_parserSigep')) {
             require_once('fpdi_pdf_parser.php');
         }
-        return new fpdi_pdf_parser($filename);
+        return new fpdi_pdf_parserSigep($filename);
     }
     
     /**
@@ -343,12 +343,12 @@ class FPDI extends FPDF_TPL
                 try {
                     $nObj = $this->currentParser->resolveObject($this->_objStack[$filename][$n][1]);
                 } catch (Exception $e) {
-                    $nObj = array(pdf_parser::TYPE_OBJECT, pdf_parser::TYPE_NULL);
+                    $nObj = array(pdf_parserSigep::TYPE_OBJECT, pdf_parser::TYPE_NULL);
                 }
 
                 $this->_newobj($this->_objStack[$filename][$n][0]);
 
-                if ($nObj[0] == pdf_parser::TYPE_STREAM) {
+                if ($nObj[0] == pdf_parserSigep::TYPE_STREAM) {
                     $this->_writeValue($nObj);
                 } else {
                     $this->_writeValue($nObj[1]);
@@ -527,11 +527,11 @@ class FPDI extends FPDF_TPL
         
         switch ($value[0]) {
 
-            case pdf_parser::TYPE_TOKEN:
+            case pdf_parserSigep::TYPE_TOKEN:
                 $this->_straightOut($value[1] . ' ');
                 break;
-            case pdf_parser::TYPE_NUMERIC:
-            case pdf_parser::TYPE_REAL:
+            case pdf_parserSigep::TYPE_NUMERIC:
+            case pdf_parserSigep::TYPE_REAL:
                 if (is_float($value[1]) && $value[1] != 0) {
                     $this->_straightOut(rtrim(rtrim(sprintf('%F', $value[1]), '0'), '.') . ' ');
                 } else {
@@ -539,7 +539,7 @@ class FPDI extends FPDF_TPL
                 }
                 break;
                 
-            case pdf_parser::TYPE_ARRAY:
+            case pdf_parserSigep::TYPE_ARRAY:
 
                 // An array. Output the proper
                 // structure and move on.
@@ -552,22 +552,22 @@ class FPDI extends FPDF_TPL
                 $this->_out(']');
                 break;
 
-            case pdf_parser::TYPE_DICTIONARY:
+            case pdf_parserSigep::TYPE_DICTIONARY:
 
                 // A dictionary.
                 $this->_straightOut('<<');
 
                 reset ($value[1]);
 
-                while (list($k, $v) = each($value[1])) {
-                    $this->_straightOut($k . ' ');
+                foreach($value[1] as $k=>$v) {
+					$this->_straightOut($k . ' ');
                     $this->_writeValue($v);
-                }
+				}
 
                 $this->_straightOut('>>');
                 break;
 
-            case pdf_parser::TYPE_OBJREF:
+            case pdf_parserSigep::TYPE_OBJREF:
 
                 // An indirect object reference
                 // Fill the object stack if needed
@@ -582,14 +582,14 @@ class FPDI extends FPDF_TPL
                 $this->_out($objId . ' 0 R');
                 break;
 
-            case pdf_parser::TYPE_STRING:
+            case pdf_parserSigep::TYPE_STRING:
 
                 // A string.
                 $this->_straightOut('(' . $value[1] . ')');
 
                 break;
 
-            case pdf_parser::TYPE_STREAM:
+            case pdf_parserSigep::TYPE_STREAM:
 
                 // A stream. First, output the
                 // stream dictionary, then the
@@ -600,15 +600,15 @@ class FPDI extends FPDF_TPL
                 $this->_straightOut("endstream");
                 break;
                 
-            case pdf_parser::TYPE_HEX:
+            case pdf_parserSigep::TYPE_HEX:
                 $this->_straightOut('<' . $value[1] . '>');
                 break;
 
-            case pdf_parser::TYPE_BOOLEAN:
+            case pdf_parserSigep::TYPE_BOOLEAN:
                 $this->_straightOut($value[1] ? 'true ' : 'false ');
                 break;
             
-            case pdf_parser::TYPE_NULL:
+            case pdf_parserSigep::TYPE_NULL:
                 // The null object.
                 $this->_straightOut('null ');
                 break;
@@ -685,7 +685,7 @@ class FPDI extends FPDF_TPL
     {
         while (($parser = array_pop($this->parsers)) !== null) {
             /**
-             * @var fpdi_pdf_parser $parser
+             * @var fpdi_pdf_parserSigep $parser
              */
             $parser->closeFile();
         }
